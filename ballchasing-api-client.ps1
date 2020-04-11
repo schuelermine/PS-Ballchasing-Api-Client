@@ -1,3 +1,7 @@
+# GLOBAL CONSTANTS
+# Here to allow easy editing
+$DefaultDelay = 500
+
 function Get-ReplayIDs {
     param([String]$APIKey, [Hashtable]$Parameters)
     $URIParameterString = ConvertTo-URIParameterString -Parameters $Parameters
@@ -37,8 +41,12 @@ function Get-NextReplayIDs {
 }
 
 function Get-ReplayContentByID {
-    param([String]$ReplayID, [String]$OutputPath)
+    param([String]$ReplayID, [String]$OutputPath, [Int32]$Delay)
+    if ($null -eq $Delay) {
+        $Delay = $DefaultDelay
+    }
     cURL -X POST "https://ballchasing.com/dl/$ReplayID" --output "$OutputPath\$ReplayID.replay"
+    Start-Sleep -Milliseconds $Delay
 }
 
 filter Get-ReplayContentsByID {
