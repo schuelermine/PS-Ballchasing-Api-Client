@@ -21,6 +21,6 @@ Recommended:
 
 To download all your replays:
 
-`Get-MyReplayIDs -APIKey $YourAPIKey | Get-ReplayContentsByID -OutputPath $DesiredOutputPath`
+`Get-MyReplayIDs -APIKey $YourAPIKey | Get-ReplayContentsByIDs -OutputPath $DesiredOutputPath`
 
 where `$APIKey` and `$DesiredOutputPath` are your API Key and desired output folder path, respectively.
