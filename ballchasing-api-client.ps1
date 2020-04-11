@@ -45,7 +45,7 @@ function Get-ReplayContentByID {
     if ($null -eq $Delay) {
         $Delay = $DefaultDelay
     }
-    cURL -X POST "https://ballchasing.com/dl/$ReplayID" --output "$OutputPath\$ReplayID.replay"
+    cURL -X POST "https://ballchasing.com/dl/replay/$ReplayID" --output "$OutputPath\$ReplayID.replay"
     Start-Sleep -Milliseconds $Delay
 }
 
