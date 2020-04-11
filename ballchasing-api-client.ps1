@@ -36,14 +36,14 @@ function Get-NextReplayIDs {
     return $Replays
 }
 
-function Get-ReplayContent {
+function Get-ReplayContentByID {
     param([String]$ReplayID, [String]$OutputPath)
     cURL -X POST "https://ballchasing.com/dl/$ReplayID" --output "$OutputPath\$ReplayID.replay"
 }
 
-filter Get-ReplayContents {
+filter Get-ReplayContentsByID {
     param([String]$OutputPath)
-    Get-ReplayContent -ReplayID $_ -OutputPath $OutputPath
+    Get-ReplayContentByID -ReplayID $_ -OutputPath $OutputPath
 }
 
 function ConvertTo-URIParameterString {
