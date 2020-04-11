@@ -5,7 +5,7 @@ $DefaultDelay = 500
 function Get-ReplayIDs {
     param([String]$APIKey, [Hashtable]$Parameters)
     $URIParameterString = ConvertTo-URIParameterString -Parameters $Parameters
-    $Response = `
+    $Response =
         cURL "https://ballchasing.com/api/replays$URIParameterString" `
         -H "Authorization: $APIKey" | ConvertFrom-Json
     $Replays = $Response.list | ForEach-Object { return $_.id }
@@ -18,7 +18,7 @@ function Get-ReplayIDs {
 
 function Get-MyReplayIDs {
     param([String]$APIKey)
-    $Response = `
+    $Response =
         cURL "https://ballchasing.com/api/replays?uploader=me&count=200" `
         -H "Authorization: $APIKey" | ConvertFrom-Json
     $Replays = $Response.list | ForEach-Object { return $_.id }
