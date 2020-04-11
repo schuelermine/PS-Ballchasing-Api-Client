@@ -5,4 +5,4 @@ A simple CLI client for the ballchasing.com API
 
 To download all your replays:
 
-`Get-MyReplayIDs -APIKey $YourAPIKey | Get-ReplayContents -OutputPath $DesiredOutputPath`
+`Get-MyReplayIDs -APIKey $YourAPIKey | Get-ReplayContentsByID -OutputPath $DesiredOutputPath`
