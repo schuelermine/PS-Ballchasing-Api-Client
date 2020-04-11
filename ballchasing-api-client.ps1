@@ -49,7 +49,7 @@ function Get-ReplayContentByID {
     Start-Sleep -Milliseconds $Delay
 }
 
-filter Get-ReplayContentsByID {
+filter Get-ReplayContentsByIDs {
     param([String]$OutputPath)
     Get-ReplayContentByID -ReplayID $_ -OutputPath $OutputPath
 }
