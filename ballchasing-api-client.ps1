@@ -1,3 +1,5 @@
+# ANCHOR Main functions
+
 function Get-ReplayIDs {
     param ([String]$APIKey, [Hashtable]$Parameters)
     $URIParameterString = ConvertTo-URIParameterString -Parameters $Parameters
@@ -68,6 +70,7 @@ function Get-ReplayContentsByIDs {
     }
 }
 
+# ANCHOR Helper functions
 function ConvertTo-URIParameterString {
     param ([Hashtable]$Parameters)
     $Keys = $Parameters.Keys
