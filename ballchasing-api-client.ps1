@@ -1,5 +1,5 @@
 function Get-ReplayIDs {
-    param([String]$APIKey, [Hashtable]$Parameters)
+    param ([String]$APIKey, [Hashtable]$Parameters)
     $URIParameterString = ConvertTo-URIParameterString -Parameters $Parameters
     $Response =
         cURL "https://ballchasing.com/api/replays$URIParameterString" `
@@ -13,7 +13,7 @@ function Get-ReplayIDs {
 }
 
 function Get-MyReplayIDs {
-    param([String]$APIKey)
+    param ([String]$APIKey)
     $Response =
         cURL "https://ballchasing.com/api/replays?uploader=me&count=200" `
         -H "Authorization: $APIKey" | ConvertFrom-Json
@@ -26,7 +26,7 @@ function Get-MyReplayIDs {
 }
 
 function Get-NextReplayIDs {
-    param([String]$APIKey, [String]$URL)
+    param ([String]$APIKey, [String]$URL)
     $Response = cURL $URL -H "Authorization: $APIKey" | ConvertFrom-Json
     $Replays = $Response.list | ForEach-Object { return $_.id }
     $NextURL = $Response.next
@@ -37,7 +37,7 @@ function Get-NextReplayIDs {
 }
 
 function Get-ReplayContentByID {
-    param([String]$ReplayID, [String]$OutputPath, [Int32]$Delay)
+    param ([String]$ReplayID, [String]$OutputPath, [Int32]$Delay)
     if ($null -eq $Delay) {
         $Delay = 500
     }
@@ -46,12 +46,12 @@ function Get-ReplayContentByID {
 }
 
 filter Get-ReplayContentsByIDs {
-    param([String]$OutputPath)
+    param ([String]$OutputPath)
     Get-ReplayContentByID -ReplayID $_ -OutputPath $OutputPath
 }
 
 function ConvertTo-URIParameterString {
-    param([Hashtable]$Parameters)
+    param ([Hashtable]$Parameters)
     $Keys = $Parameters.Keys
     $Result = $Keys | ForEach-Object { "$_=" + $Parameters.Item($_) }
     $Result = "?" + ($Result -join "&")
