@@ -10,6 +10,7 @@ function Get-ReplayIDs {
 
     $Response = Invoke-WebRequest @ReplayWebRequest | ConvertTo-Json
     $Replays = $Response.list | ForEach-Object { return $_.id }
+    
     $NextURL = $Response.next
     if ($null -ne $NextURL) {
         $Replays += Get-NextReplayIDs -APIKey $APIKey -Next $NextURL
@@ -135,4 +136,7 @@ function ConvertTo-URIParameterString {
     return $Result
 }
 
-Export-ModuleMember -Function Get-ReplayIDs, Get-MyReplayIDs, Get-SingleReplayContentByID, Get-ReplayContentsByIDs
+Export-ModuleMember -Function Get-ReplayIDs,
+    Get-MyReplayIDs,
+    Get-SingleReplayContentByID,
+    Get-ReplayContentsByIDs
