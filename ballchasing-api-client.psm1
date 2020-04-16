@@ -5,7 +5,7 @@ function Get-ReplayIDs {
     $URIParameterString = ConvertTo-URIParameterString -Parameters $Parameters
     $ReplayWebRequest = @{
         Headers = "Authorization: $APIKey"
-        Uri = "https://ballchasing.com/api/replays$URIParameterString"
+        Uri     = "https://ballchasing.com/api/replays$URIParameterString"
     }
 
     $Response = Invoke-WebRequest @ReplayWebRequest | ConvertTo-Json
@@ -73,7 +73,8 @@ function Get-SingleReplayContentByID {
         $UserChoice = Read-Host -Prompt "The file $OutputPath already exists. Overwrite it? [Y/n]"
         if ($UserChoice -match "n") {
             $Success = $true
-        } else {
+        }
+        else {
             Remove-Item $OutputPath
             Write-Host "Original file removed"
         }
@@ -85,7 +86,8 @@ function Get-SingleReplayContentByID {
         if ($StatusCode -ne 200) {
             Remove-Item $OutputPath
             Start-Sleep -Milliseconds 60000
-        } else {
+        }
+        else {
             $Success = $true
             Write-Host "$ReplayID `t - Success"
         }
@@ -137,6 +139,6 @@ function ConvertTo-URIParameterString {
 }
 
 Export-ModuleMember -Function Get-ReplayIDs,
-    Get-MyReplayIDs,
-    Get-SingleReplayContentByID,
-    Get-ReplayContentsByIDs
+Get-MyReplayIDs,
+Get-SingleReplayContentByID,
+Get-ReplayContentsByIDs
