@@ -13,9 +13,7 @@ A simple CLI client for the ballchasing.com API
 Recommended:
 
 - a stable version of
-  - PowerShell 7.0+ *or*
-  - Windows PowerShell 5.0+ *or*
-  - PowerShell Core 6.0+
+  - PowerShell 7.0+
 
 ## Usage
 
