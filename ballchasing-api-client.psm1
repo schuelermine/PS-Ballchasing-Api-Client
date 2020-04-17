@@ -25,6 +25,7 @@ function Test-APIKey {
     try {
         $Response = Invoke-WebRequest -SkipHttpErrorCheck @Request
         $StatusCode = $Response.StatusCode
+        $Content = $Response.Content
     }
     catch {
         Write-Host "Invalid API key format"
@@ -33,19 +34,17 @@ function Test-APIKey {
     
     if ($StatusCode -ne 200) {
         try {
-            $Exception = ($Response.Content | ConvertFrom-Json).error
+            $Exception = ($Content | ConvertFrom-Json).error
 
             Write-Host "Ballchasing API returned this error:"
             Write-Host $Exception
-
-            return $false
         }
         catch {
             Write-Host "No error returned, but the status code was not 200"
             Write-Host "Status code: $StatusCode"
-
-            return $false
         }
+        
+        return $false
     }
     else {
         return $true
@@ -58,8 +57,8 @@ function Get-ReplayIDs {
         [Hashtable]$Parameters
     )
 
-    $IsValid = Test-APIKey -APIKey $APIKey
-    if (-not $IsValid) {
+    $APIKeyIsValid = Test-APIKey -APIKey $APIKey
+    if (-not $APIKeyIsValid) {
         return $null
     }
 
@@ -85,8 +84,8 @@ function Get-MyReplayIDs {
         [String]$APIKey
     )
 
-    $IsValid = Test-APIKey -APIKey $APIKey
-    if (-not $IsValid) {
+    $APIKeyIsValid = Test-APIKey -APIKey $APIKey
+    if (-not $APIKeyIsValid) {
         return $null
     }
 
@@ -119,6 +118,7 @@ function Get-NextReplayIDs {
     $Response = Invoke-WebRequest @NextWebRequest | ConvertFrom-Json
     $Replays = $Response.list | ForEach-Object { return $_.id }
     $NextURL = $Response.next
+    
     if ($null -ne $NextURL) {
         $Replays += Get-NextReplayIDs -APIKey $APIKey -URL $NextURL
     }
@@ -162,6 +162,7 @@ function Get-SingleReplayContentByID {
         elseif (-not $Overwrite) {
             $UserChoice =
                 Read-Host -Prompt "The file $OutputPath already exists. Overwrite it? [Y/n]"
+            
             if ($UserChoice -match "n") {
                 $Remove = $false
             }
@@ -236,11 +237,14 @@ function Get-ReplayContentsByIDs {
         }
 
         if ($Counter -ge 15 -and $Timer.ElapsedMilliseconds -le 60000) {
-            Start-Sleep -Milliseconds ($SafetyDelay + 60000 - $Timer.ElapsedMilliseconds)
+            $Wait = $SafetyDelay + 60000 - $Timer.ElapsedMilliseconds
+            Start-Sleep -Milliseconds $Wait
+            Write-Host "Waiting for $Wait seconds to obey rate limits"
             $Counter = 0u
         }
         elseif ($Timer.ElapsedMilliseconds -le 1000) {
-            Start-Sleep -Milliseconds ($SafetyDelay + 1000 - $Timer.ElapsedMilliseconds)
+            $Wait = $SafetyDelay + 1000 - $Timer.ElapsedMilliseconds
+            Start-Sleep -Milliseconds $Wait
         }
 
         $Timer.Reset()
