@@ -3,15 +3,6 @@ A simple CLI client for the ballchasing.com API
 
 ## Usage prerequisites
 
-- a current-enough version of
-  - PowerShell *or*
-  - Windows PowerShell *or*
-  - PowerShell Core
-- an installation of cURL
-  - that is available in the console (in your `$env:Path`)
-
-Recommended:
-
 - a stable version of
   - PowerShell 7.0+
 
