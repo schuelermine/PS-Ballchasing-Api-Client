@@ -1,10 +1,58 @@
 # ANCHOR Main functions
+function Test-APIKey {
+    param ([String]$APIKey)
+
+    if ([String]::IsNullOrEmpty($APIKey)) {
+        Write-Host "No API key"
+        return $false
+    }
+
+    $Request = @{
+        Headers = @{Authorization = $APIKey}
+        Uri     = "https://ballchasing.com/api/"
+    }
+
+    try {
+        $Response = Invoke-WebRequest -SkipHttpErrorCheck @Request
+        $StatusCode = $Response.StatusCode
+    }
+    catch {
+        Write-Host "Invalid API key format"
+        return $false
+    }
+    
+    if ($StatusCode -ne 200) {
+        try {
+            $Exception = ($Response.Content | ConvertFrom-Json).error
+
+            Write-Host "Ballchasing API returned Error:"
+            Write-Host $Exception
+
+            return $false
+        }
+        catch {
+            Write-Host "No error returned, but the status code was not 200"
+            Write-Host "Status code: $StatusCode"
+
+            return $false
+        }
+    }
+    else {
+        return $true
+    }
+}
+
 function Get-ReplayIDs {
     param ([String]$APIKey, [Hashtable]$Parameters)
 
+    $IsValid = Test-APIKey -APIKey $APIKey
+    if (-not $IsValid) {
+        return $null
+    }
+
     $URIParameterString = ConvertTo-URIParameterString -Parameters $Parameters
     $ReplayWebRequest = @{
-        Headers = "Authorization: $APIKey"
+        Headers = @{Authorization = $APIKey}
         Uri     = "https://ballchasing.com/api/replays$URIParameterString"
     }
 
@@ -13,7 +61,7 @@ function Get-ReplayIDs {
     
     $NextURL = $Response.next
     if ($null -ne $NextURL) {
-        $Replays += Get-NextReplayIDs -APIKey $APIKey -Next $NextURL
+        $Replays += Get-NextReplayIDs -APIKey $APIKey -URL $NextURL
     }
 
     return $Replays
@@ -22,8 +70,13 @@ function Get-ReplayIDs {
 function Get-MyReplayIDs {
     param ([String]$APIKey)
 
+    $IsValid = Test-APIKey -APIKey $APIKey
+    if (-not $IsValid) {
+        return $null
+    }
+
     $ReplayWebRequest = @{
-        Headers = "Authorization: $APIKey"
+        Headers = @{Authorization = $APIKey}
         Uri     = "https://ballchasing.com/api/replays?uploader=me&count=200"
     }
 
@@ -31,7 +84,7 @@ function Get-MyReplayIDs {
     $Replays = $Response.list | ForEach-Object { return $_.id }
     $NextURL = $Response.next
     if ($null -ne $NextURL) {
-        $Replays += Get-NextReplayIDs -APIKey $APIKey -Next $NextURL
+        $Replays += Get-NextReplayIDs -APIKey $APIKey -URL $NextURL
     }
 
     return $Replays
@@ -41,7 +94,7 @@ function Get-NextReplayIDs {
     param ([String]$APIKey, [String]$URL)
 
     $NextWebRequest = @{
-        Headers = "Authorization: $APIKey"
+        Headers = @{Authorization = $APIKey}
         Uri     = $URL
     }
 
@@ -61,7 +114,7 @@ function Get-SingleReplayContentByID {
         $Delay = 500
     }
     
-    $Success = $false
+    $Done = $false
     $OutputPath = "$OutputFolder\$ReplayID.replay"
     $DataWebRequest = @{
         OutFile = $OutputPath
@@ -72,7 +125,7 @@ function Get-SingleReplayContentByID {
     if (Test-Path $OutputPath -and -not $Overwrite) {
         $UserChoice = Read-Host -Prompt "The file $OutputPath already exists. Overwrite it? [Y/n]"
         if ($UserChoice -match "n") {
-            $Success = $true
+            $Done = $true
         }
         else {
             Remove-Item $OutputPath
@@ -80,15 +133,17 @@ function Get-SingleReplayContentByID {
         }
     }
 
-    while (-not $Success) {
-        $StatusCode = (Invoke-WebRequest @DataWebRequest -PassThru).StatusCode
+    while (-not $Done) {
+        $StatusCode = (Invoke-WebRequest -SkipHttpErrorCheck -PassThru @DataWebRequest).StatusCode
 
         if ($StatusCode -ne 200) {
-            Remove-Item $OutputPath
+            if (Test-Path $OutputPath) {
+                Remove-Item $OutputPath
+            }
             Start-Sleep -Milliseconds 60000
         }
         else {
-            $Success = $true
+            $Done = $true
             Write-Host "$ReplayID `t - Success"
         }
     }
@@ -139,6 +194,6 @@ function ConvertTo-URIParameterString {
 }
 
 Export-ModuleMember -Function Get-ReplayIDs,
-Get-MyReplayIDs,
-Get-SingleReplayContentByID,
-Get-ReplayContentsByIDs
+    Get-MyReplayIDs,
+    Get-SingleReplayContentByID,
+    Get-ReplayContentsByIDs
