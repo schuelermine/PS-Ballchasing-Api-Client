@@ -109,11 +109,12 @@ function Get-NextReplayIDs {
 }
 
 function Get-SingleReplayContentByID {
-    param ([String]$ReplayID, [String]$OutputFolder, [Int32]$Delay, [Switch]$SkipDelay, [Switch]$Overwrite)
-    if ($null -eq $Delay) {
+    param ([String]$ReplayID, [String]$OutputFolder, [Int32]$Delay, [Switch]$SkipDelay, [Switch]$Overwrite, [Switch]$KeepFiles)
+    if (-not $PSBoundParameters.ContainsKey("Delay")) {
         $Delay = 500
     }
     
+    $DidRequest = $false
     $Done = $false
     $OutputPath = "$OutputFolder\$ReplayID.replay"
     $DataWebRequest = @{
@@ -122,22 +123,42 @@ function Get-SingleReplayContentByID {
         Uri     = "https://ballchasing.com/dl/replay/$ReplayID"
     }
 
-    if (Test-Path $OutputPath -and -not $Overwrite) {
-        $UserChoice = Read-Host -Prompt "The file $OutputPath already exists. Overwrite it? [Y/n]"
-        if ($UserChoice -match "n") {
-            $Done = $true
+    
+    if ((Test-Path $OutputPath)) {
+        if ($KeepFiles) {
+            $Remove = $false
+        }
+        elseif ($Overwrite) {
+            $Remove = $true
+        }
+        elseif (-not $Overwrite -and -not $KeepFiles) {
+            $UserChoice = Read-Host -Prompt "The file $OutputPath already exists. Overwrite it? [Y/n]"
+            if ($UserChoice -match "n") {
+                $Remove = $false
+            }
+            else {
+                $Remove = $true
+            }
+        }
+
+        if ($Remove) {
+            Remove-Item $OutputPath
+            Write-Host "Exising file removed"
         }
         else {
-            Remove-Item $OutputPath
-            Write-Host "Original file removed"
+            $Done = $true
+            Write-Host "Skipping existing file"
         }
     }
 
     while (-not $Done) {
         $StatusCode = (Invoke-WebRequest -SkipHttpErrorCheck -PassThru @DataWebRequest).StatusCode
 
+        $DidRequest = $true
+
         if ($StatusCode -ne 200) {
-            if (Test-Path $OutputPath) {
+            Write-Host "Failed getting replay, retrying in 60 seconds"
+            if ((Test-Path $OutputPath)) {
                 Remove-Item $OutputPath
             }
             Start-Sleep -Milliseconds 60000
@@ -151,10 +172,12 @@ function Get-SingleReplayContentByID {
     if (-not $SkipDelay) {
         Start-Sleep -Milliseconds $Delay
     }
+
+    return $DidRequest
 }
 
 function Get-ReplayContentsByIDs {
-    param ([String]$OutputFolder, [Int32]$SafetyDelay)
+    param ([String]$OutputFolder, [Int32]$SafetyDelay, [Switch]$KeepFiles)
 
     begin {
         $Counter = 0u
@@ -163,22 +186,24 @@ function Get-ReplayContentsByIDs {
     }
 
     process {
-        $Counter += 1
-
         $Timer.Start()
-        Get-SingleReplayContentByID -ReplayID $_ -OutputFolder $OutputFolder -SkipDelay
+        $DidRequest =
+            Get-SingleReplayContentByID -ReplayID $_ -OutputFolder $OutputFolder -SkipDelay -KeepFiles:$KeepFiles
         $Timer.Stop()
+
+        if ($DidRequest) {
+            $Counter += 1
+        }
 
         if ($Counter -ge 15 -and $Timer.ElapsedMilliseconds -le 60000) {
             Start-Sleep -Milliseconds ($SafetyDelay + 60000 - $Timer.ElapsedMilliseconds)
             $Counter = 0u
-            $Timer.Reset()
         }
-        
         elseif ($Timer.ElapsedMilliseconds -le 1000) {
             Start-Sleep -Milliseconds ($SafetyDelay + 1000 - $Timer.ElapsedMilliseconds)
-            $Timer.Reset()
         }
+
+        $Timer.Reset()
     }
 }
 
@@ -193,7 +218,8 @@ function ConvertTo-URIParameterString {
     return $Result
 }
 
-Export-ModuleMember -Function Get-ReplayIDs,
+Export-ModuleMember -Function Test-APIKey,
+    Get-ReplayIDs,
     Get-MyReplayIDs,
     Get-SingleReplayContentByID,
     Get-ReplayContentsByIDs
