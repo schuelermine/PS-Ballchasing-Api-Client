@@ -2,7 +2,7 @@
 function Test-APIKey {
     param ([String]$APIKey, [Switch]$ForceNoAPIKey)
 
-    if ([String]::IsNullOrEmpty($APIKey) -and -not $NoAPIKey) {
+    if ([String]::IsNullOrEmpty($APIKey) -and -not $ForceNoAPIKey) {
         Write-Host "No API key"
         return $false
     }
@@ -32,7 +32,7 @@ function Test-APIKey {
         try {
             $Exception = ($Response.Content | ConvertFrom-Json).error
 
-            Write-Host "Ballchasing API returned Error:"
+            Write-Host "Ballchasing API returned this error:"
             Write-Host $Exception
 
             return $false
