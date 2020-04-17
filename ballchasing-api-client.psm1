@@ -102,7 +102,7 @@ function Get-NextReplayIDs {
     $Replays = $Response.list | ForEach-Object { return $_.id }
     $NextURL = $Response.next
     if ($null -ne $NextURL) {
-        $Replays += Get-NextReplayIDs -APIKey $APIKey -Next $Next
+        $Replays += Get-NextReplayIDs -APIKey $APIKey -URL $NextURL
     }
 
     return $Replays
