@@ -1,4 +1,4 @@
-# PS_BallchasingAPIClient
+# PS_Ballchasing-API-Client
 
 A simple CLI client for the ballchasing.com API
 
