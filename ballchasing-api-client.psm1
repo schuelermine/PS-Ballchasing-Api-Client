@@ -8,10 +8,10 @@ function Test-APIKey {
     }
 
     if ($ForceNoAPIKey) {
-        $Headers = @{}
+        $Headers = @{ }
     }
     else {
-        $Headers = @{Authorization = $APIKey}
+        $Headers = @{ Authorization = $APIKey }
     }
 
     $Request = @{
@@ -59,7 +59,7 @@ function Get-ReplayIDs {
 
     $URIParameterString = ConvertTo-URIParameterString -Parameters $Parameters
     $ReplayWebRequest = @{
-        Headers = @{Authorization = $APIKey}
+        Headers = @{ Authorization = $APIKey }
         Uri     = "https://ballchasing.com/api/replays$URIParameterString"
     }
 
@@ -83,7 +83,7 @@ function Get-MyReplayIDs {
     }
 
     $ReplayWebRequest = @{
-        Headers = @{Authorization = $APIKey}
+        Headers = @{ Authorization = $APIKey }
         Uri     = "https://ballchasing.com/api/replays?uploader=me&count=200"
     }
 
@@ -101,7 +101,7 @@ function Get-NextReplayIDs {
     param ([String]$APIKey, [String]$URL)
 
     $NextWebRequest = @{
-        Headers = @{Authorization = $APIKey}
+        Headers = @{ Authorization = $APIKey }
         Uri     = $URL
     }
 
