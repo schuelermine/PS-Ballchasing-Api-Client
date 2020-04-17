@@ -1,14 +1,21 @@
 # ANCHOR Main functions
 function Test-APIKey {
-    param ([String]$APIKey)
+    param ([String]$APIKey, [Switch]$ForceNoAPIKey)
 
-    if ([String]::IsNullOrEmpty($APIKey)) {
+    if ([String]::IsNullOrEmpty($APIKey) -and -not $NoAPIKey) {
         Write-Host "No API key"
         return $false
     }
 
+    if ($ForceNoAPIKey) {
+        $Headers = @{}
+    }
+    else {
+        $Headers = @{Authorization = $APIKey}
+    }
+
     $Request = @{
-        Headers = @{Authorization = $APIKey}
+        Headers = $Headers
         Uri     = "https://ballchasing.com/api/"
     }
 
