@@ -160,7 +160,8 @@ function Get-SingleReplayContentByID {
             $Remove = $true
         }
         elseif (-not $Overwrite) {
-            $UserChoice = Read-Host -Prompt "The file $OutputPath already exists. Overwrite it? [Y/n]"
+            $UserChoice =
+                Read-Host -Prompt "The file $OutputPath already exists. Overwrite it? [Y/n]"
             if ($UserChoice -match "n") {
                 $Remove = $false
             }
