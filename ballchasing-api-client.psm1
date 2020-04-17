@@ -1,6 +1,9 @@
 # ANCHOR Main functions
 function Test-APIKey {
-    param ([String]$APIKey, [Switch]$ForceNoAPIKey)
+    param (
+        [String]$APIKey,
+        [Switch]$ForceNoAPIKey
+    )
 
     if ([String]::IsNullOrEmpty($APIKey) -and -not $ForceNoAPIKey) {
         Write-Host "No API key"
@@ -50,7 +53,10 @@ function Test-APIKey {
 }
 
 function Get-ReplayIDs {
-    param ([String]$APIKey, [Hashtable]$Parameters)
+    param (
+        [String]$APIKey,
+        [Hashtable]$Parameters
+    )
 
     $IsValid = Test-APIKey -APIKey $APIKey
     if (-not $IsValid) {
@@ -75,7 +81,9 @@ function Get-ReplayIDs {
 }
 
 function Get-MyReplayIDs {
-    param ([String]$APIKey)
+    param (
+        [String]$APIKey
+    )
 
     $IsValid = Test-APIKey -APIKey $APIKey
     if (-not $IsValid) {
@@ -98,7 +106,10 @@ function Get-MyReplayIDs {
 }
 
 function Get-NextReplayIDs {
-    param ([String]$APIKey, [String]$URL)
+    param (
+        [String]$APIKey,
+        [String]$URL
+    )
 
     $NextWebRequest = @{
         Headers = @{ Authorization = $APIKey }
@@ -116,7 +127,15 @@ function Get-NextReplayIDs {
 }
 
 function Get-SingleReplayContentByID {
-    param ([String]$ReplayID, [String]$OutputFolder, [Int32]$Delay, [Switch]$SkipDelay, [Switch]$Overwrite, [Switch]$KeepFiles)
+    param (
+        [String]$ReplayID,
+        [String]$OutputFolder,
+        [Int32]$Delay,
+        [Switch]$SkipDelay,
+        [Switch]$Overwrite,
+        [Switch]$KeepFile
+    )
+
     if (-not $PSBoundParameters.ContainsKey("Delay")) {
         $Delay = 500
     }
@@ -125,20 +144,22 @@ function Get-SingleReplayContentByID {
     $Done = $false
     $OutputPath = "$OutputFolder\$ReplayID.replay"
     $DataWebRequest = @{
-        OutFile = $OutputPath
-        Method  = "Post"
-        Uri     = "https://ballchasing.com/dl/replay/$ReplayID"
+        SkipHttpErrorCheck = $true
+        PassThru           = $true
+        OutFile            = $OutputPath
+        Method             = "Post"
+        Uri                = "https://ballchasing.com/dl/replay/$ReplayID"
     }
 
     
     if ((Test-Path $OutputPath)) {
-        if ($KeepFiles) {
+        if ($KeepFile) {
             $Remove = $false
         }
         elseif ($Overwrite) {
             $Remove = $true
         }
-        elseif (-not $Overwrite -and -not $KeepFiles) {
+        elseif (-not $Overwrite) {
             $UserChoice = Read-Host -Prompt "The file $OutputPath already exists. Overwrite it? [Y/n]"
             if ($UserChoice -match "n") {
                 $Remove = $false
@@ -159,7 +180,7 @@ function Get-SingleReplayContentByID {
     }
 
     while (-not $Done) {
-        $StatusCode = (Invoke-WebRequest -SkipHttpErrorCheck -PassThru @DataWebRequest).StatusCode
+        $StatusCode = (Invoke-WebRequest @DataWebRequest).StatusCode
 
         $DidRequest = $true
 
@@ -184,18 +205,29 @@ function Get-SingleReplayContentByID {
 }
 
 function Get-ReplayContentsByIDs {
-    param ([String]$OutputFolder, [Int32]$SafetyDelay, [Switch]$KeepFiles)
+    param (
+        [String]$OutputFolder,
+        [Int32]$SafetyDelay,
+        [Switch]$Overwrite,
+        [Switch]$KeepFiles
+    )
 
     begin {
         $Counter = 0u
         $Timer = [System.Diagnostics.Stopwatch]::StartNew()
         $Timer.Stop()
+        $GetDataParameters = @{
+            ReplayID     = $_
+            KeepFile     = $KeepFiles
+            OutputFolder = $OutputFolder
+            SkipDelay    = $true
+        }
     }
 
     process {
         $Timer.Start()
         $DidRequest =
-            Get-SingleReplayContentByID -ReplayID $_ -OutputFolder $OutputFolder -SkipDelay -KeepFiles:$KeepFiles
+            Get-SingleReplayContentByID @GetDataParameters
         $Timer.Stop()
 
         if ($DidRequest) {
@@ -216,7 +248,9 @@ function Get-ReplayContentsByIDs {
 
 # ANCHOR Helper functions
 function ConvertTo-URIParameterString {
-    param ([Hashtable]$Parameters)
+    param (
+        [Hashtable]$Parameters
+    )
 
     $Keys = $Parameters.Keys
     $Result = $Keys | ForEach-Object { "$_=" + $Parameters.Item($_) }
