@@ -3,8 +3,7 @@ A simple CLI client for the ballchasing.com API
 
 ## Usage prerequisites
 
-- a stable version of
-  - PowerShell 7.0+
+A stable version of PowerShell 7.0+
 
 ## Usage
 
