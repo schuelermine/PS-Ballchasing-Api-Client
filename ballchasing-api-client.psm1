@@ -215,7 +215,7 @@ function Get-ReplayContentsByIDs {
     )
 
     begin {
-        $Counter = 0u
+        $Counter = [UInt32]0
         $Timer = [System.Diagnostics.Stopwatch]::StartNew()
         $Timer.Stop()
         $GetDataParameters = @{
@@ -240,7 +240,7 @@ function Get-ReplayContentsByIDs {
             $Wait = $SafetyDelay + 60000 - $Timer.ElapsedMilliseconds
             Start-Sleep -Milliseconds $Wait
             Write-Host "Waiting for $Wait seconds to obey rate limits"
-            $Counter = 0u
+            $Counter = [UInt32]0
         }
         elseif ($Timer.ElapsedMilliseconds -le 1000) {
             $Wait = $SafetyDelay + 1000 - $Timer.ElapsedMilliseconds
