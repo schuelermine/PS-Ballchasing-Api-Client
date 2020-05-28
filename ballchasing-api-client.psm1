@@ -1,24 +1,31 @@
 # ANCHOR Main functions
-function Test-APIKey {
+
+function Test-APIStatus {
     param (
-        [String]$APIKey,
-        [Switch]$ForceNoAPIKey
+        [Switch]$DoAPICheck
     )
 
-    if ([String]::IsNullOrEmpty($APIKey) -and -not $ForceNoAPIKey) {
-        Write-Host "No API key"
-        return $false
+    $URL = "https://ballchasing.com"
+
+    Test-Connection $URL
+    $Success = $?
+
+    if ($Success -and $DoAPICheck.IsPresent) {
+        Invoke-WebRequest $URL -SkipHttpErrorCheck
+        $Success = $?
     }
 
-    if ($ForceNoAPIKey) {
-        $Headers = @{ }
-    }
-    else {
-        $Headers = @{ Authorization = $APIKey }
-    }
+    $Success
+}
+
+function Test-APIKey {
+    param (
+        [Parameter(Mandatory)]
+        [String]$APIKey
+    )
 
     $Request = @{
-        Headers = $Headers
+        Headers = @{ Authorization = $APIKey }
         Uri     = "https://ballchasing.com/api/"
     }
 
@@ -28,7 +35,7 @@ function Test-APIKey {
         $Content = $Response.Content
     }
     catch {
-        Write-Host "Invalid API key format"
+        Write-Host "Possibly invalid API key format"
         return $false
     }
     
@@ -36,30 +43,35 @@ function Test-APIKey {
         try {
             $Exception = ($Content | ConvertFrom-Json).error
 
-            Write-Host "Ballchasing API returned this error:"
-            Write-Host $Exception
+            Write-Error "Ballchasing API returned this error:"
+            Write-Error $Exception
         }
         catch {
-            Write-Host "No error returned, but the status code was not 200"
-            Write-Host "Status code: $StatusCode"
+            Write-Error "No error returned, but the status code was not 200"
+            Write-Error "Status code: $StatusCode"
         }
         
-        return $false
+        $true
+        exit 1
     }
     else {
-        return $true
+        $false
+        exit
     }
 }
 
 function Get-ReplayIDs {
     param (
+        [Parameter(Mandatory)]
         [String]$APIKey,
-        [Hashtable]$Parameters
+
+        [ValidateNotNull()]
+        [Hashtable]$Parameters = @()
     )
 
-    $APIKeyIsValid = Test-APIKey -APIKey $APIKey
-    if (-not $APIKeyIsValid) {
-        return $null
+    Test-APIKey -APIKey $APIKey
+    if (-not $?) {
+        exit 1
     }
 
     $URIParameterString = ConvertTo-URIParameterString -Parameters $Parameters
@@ -69,7 +81,7 @@ function Get-ReplayIDs {
     }
 
     $Response = Invoke-WebRequest @ReplayWebRequest | ConvertTo-Json
-    $Replays = $Response.list | ForEach-Object { return $_.id }
+    $Replays = $Response.list | ForEach-Object id
     
     $NextURL = $Response.next
     if ($null -ne $NextURL) {
@@ -81,6 +93,7 @@ function Get-ReplayIDs {
 
 function Get-MyReplayIDs {
     param (
+        [Parameter(Mandatory)]
         [String]$APIKey
     )
 
@@ -106,7 +119,10 @@ function Get-MyReplayIDs {
 
 function Get-NextReplayIDs {
     param (
+        [Parameter(Mandatory)]
         [String]$APIKey,
+
+        [Parameter(Mandatory)]
         [String]$URL
     )
 
